@@ -443,6 +443,7 @@ class TrackExtendsBox(box.FullBox):
 class AvcCBox(box.Box):
     def parse(self, buf):
         super(AvcCBox, self).parse(buf)
+        start_offset = buf.current_position()
         self.configuration_level = buf.readbyte()
         self.profile = buf.readbyte()
         self.profile_compatibility = buf.readbyte()
@@ -456,13 +457,14 @@ class AvcCBox(box.Box):
         for x in xrange(num_of_sps):
             sps_len = buf.readint16()
             self.sps.append(buf.readstr(sps_len))
-
         self.pps = []
         num_of_pps = buf.readbyte()
         for x in xrange(num_of_pps):
             pps_len = buf.readint16()
             self.pps.append(buf.readstr(pps_len))
         self.has_children = False
+        buf.seekto(start_offset)
+        self.avccbox = buf.readstr(buf.stream_offset - start_offset + buf.read_ptr)
 
     def generate_fields(self):
         for x in super(AvcCBox, self).generate_fields():
@@ -476,7 +478,7 @@ class AvcCBox(box.Box):
             yield ("SPS", sps.encode('hex'))
         for pps in self.pps:
             yield ("PPS", pps.encode('hex'))
-
+        yield ("AvcC box", self.avccbox.encode('hex'))
 
 boxmap = {
     'mvhd' : MovieHeader,
