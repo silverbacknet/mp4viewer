@@ -443,6 +443,7 @@ class TrackExtendsBox(box.FullBox):
 class AvcCBox(box.Box):
     def parse(self, buf):
         super(AvcCBox, self).parse(buf)
+        self.avccbox = buf.peekstr(self.size - self.consumed_bytes)
         self.configuration_level = buf.readbyte()
         self.profile = buf.readbyte()
         self.profile_compatibility = buf.readbyte()
@@ -476,6 +477,7 @@ class AvcCBox(box.Box):
             yield ("SPS", sps.encode('hex'))
         for pps in self.pps:
             yield ("PPS", pps.encode('hex'))
+        yield ("AvcC box", self.avccbox.encode('hex'))
 
 
 boxmap = {
